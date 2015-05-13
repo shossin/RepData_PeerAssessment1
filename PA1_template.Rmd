@@ -1,25 +1,130 @@
 ---
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
+title: "Assignment 1"
+author: "Khan Safayet Hossin"
+date: "Wednesday, May 13, 2015"
+output: html_document
 ---
+In this assignment some exploratory analysis has been done using <a href="https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip"> Activity monitoring dataset</a>[52K] dataset.
 
+###Loading data
+There are 3 variables in the dataset:
 
-## Loading and preprocessing the data
+- <b>steps</b>: Number of steps taking in a 5-minute interval (missing values are coded as `NA`)
+- <b>date</b>: The date on which the measurement was taken in YYYY-MM-DD format
+- <b>interval</b>: Identifier for the 5-minute interval in which measurement was taken
 
+As a first step data is loaded into a data frame in R and some basic checks are performed.
 
+```{r}
+data.r <- read.csv("activity.csv", header=TRUE, sep=",", as.is=TRUE)
+nrow(data.r)
+summary(data.r)
+```
+###Missing values and analysis dataset preparation
+Missing values are checked in the loaded dataset
+```{r}
+colSums(is.na(data.r))
+```
+Two datasets are prepared for the analysis:
 
-## What is mean total number of steps taken per day?
+- Excluding any missing data in steps 
+- Replacing missing data in steps with the median steps across all days and all intervals
+```{r}
+## dataset 1
+data.f1 <- data.r[!is.na(data.r$steps),]
+all(colSums(is.na(data.f1))==0)
+## dataset 2
+data.f2 <- as.data.frame(data.r)
+data.f2[is.na(data.f2$steps),1] <- median(data.f2$steps, na.rm=TRUE)
+all(colSums(is.na(data.f2))==0)
+```
 
+###Steps taken per day
 
+Daily steps summary (total steps per day, median steps per day, mean steps per day) has been calculated for this part of analysis: 
+```{r}
+## dataset 1
+sm <-aggregate(data.f1$steps, by=list(data.f1$date), function(x){c(sum(x), median(x), mean(x))})
+data.s1<- cbind(as.data.frame(sm$Group), sm$x)
+names(data.s1) <- c("date", "totSteps", "medSteps", "meaSteps")
+data.s1
+## dataset 2
+sm <-aggregate(data.f2$steps, by=list(data.f2$date), function(x){c(sum(x), median(x), mean(x))})
+data.s2<- cbind(as.data.frame(sm$Group), sm$x)
+names(data.s2) <- c("date", "totSteps", "medSteps", "meaSteps")
+data.s2
+```
 
-## What is the average daily activity pattern?
+Next, the histogram of total number of steps taken each day is generated:
 
+```{r}
+par(mfrow=c(1,2))
+## dataset 1
+hist(data.s1$totSteps, breaks=20, xlab = "Total steps a day", main = "Excluding NAs", col="red")
+## dataset 2
+hist(data.s2$totSteps, breaks=20, xlab = "Total steps a day", main = "Including NAs", col="blue")
+```
 
+Also, the Box plot of total number of steps taken each day highlighting the mean as red horizontal line.
+```{r}
+m1 <-round(mean(data.s1$totSteps),0)
+m2 <-round(mean(data.s2$totSteps),0)
+par(mfrow=c(1,2))
+## dataset 1
+boxplot(data.s1$totSteps, xlab = paste("Total steps a day (mean:", m1, ")"), main = "Excluding NAs")
+abline(h=mean(data.s1$totSteps),col="red", lwd=2)
+## dataset 2
+boxplot(data.s2$totSteps, xlab = paste("Total steps a day (mean:",m2,")"), main = "Including NAs")
+abline(h=mean(data.s2$totSteps),col="red", lwd=2)
+```
 
-## Imputing missing values
+It is seen that the difference in the spread of data across the time is not that signification including/excluding the `NA's`, however, the mean has changed about a thousand steps.
 
+###Average daily activity
 
+Average daily activity pattern is analyzed including and excluding `NA's` using the time series plot. 
+```{r}
 
-## Are there differences in activity patterns between weekdays and weekends?
+## dataset 1
+par(mfrow=c(1,1))
+sm1 <-aggregate(data.f1$steps, by=list(data.f1$interval), mean)
+maxStepInterval <- sm1[sm1["x"]==max(sm1["x"]),1]
+plot(x=sm1$Group, y=sm1$x, type="l", xlab=paste("interval(max steps at:", maxStepInterval , ")"), main="Excluding NAs", ylab="steps in 5 minues")
+abline(v=sm1[sm1["x"]==max(sm1["x"]),1], col="green", lwd=2)
+## dataset 2
+par(mfrow=c(1,1))
+sm1 <-aggregate(data.f2$steps, by=list(data.f2$interval), mean)
+maxStepInterval <- sm1[sm1["x"]==max(sm1["x"]),1]
+plot(x=sm1$Group, y=sm1$x, type="l", xlab=paste("interval(max steps at:", maxStepInterval, ")"), main="Including NAs", ylab="steps in 5 minues")
+abline(v=sm1[sm1["x"]==max(sm1["x"]),1], col="green", lwd=2)
+
+```
+
+It is seen in the time series plot that the patterns have not changed due to inclusion and exclusion of the `NA's` in the dataset. The maximum steps interval remain same for both at 8:35 AM which is shown as green line in both plots.
+
+###Weekdays/Weekends activity pattern
+
+Average activity pattern during weekdays and weekends is also analyzed excluding `NA's` only as no difference has been observed in average daily actipity pattern including and excluding `NA's`.
+
+```{r}
+## dataset 1
+data.f1$dateT <- strptime(data.f1$date, "%Y-%m-%d") 
+data.f1$dateType <- weekdays(data.f1$dateT, abbreviate=TRUE)
+data.f1[data.f1$dateType %in% c("Sat","Sun"),5]<- "weekend"
+data.f1[data.f1$dateType %in% c("Mon","Tue", "Wed","Thu","Fri"),5]<- "weekday"
+data.f1$dateType <- as.factor(data.f1$dateType)
+sm3 <-aggregate(data.f1[data.f1$dateType=="weekday",1], by=list(data.f1[data.f1$dateType=="weekday",3]), mean)
+data.s3 <- cbind(as.data.frame("weekday"), sm3$Group, sm3$x)
+names(data.s3)<- c("dateType", "interval", "steps")
+
+sm4 <-aggregate(data.f1[data.f1$dateType=="weekend",1], by=list(data.f1[data.f1$dateType=="weekend",3]), mean)
+data.s4 <-cbind(as.data.frame("weekend"), sm4$Group, sm4$x)
+names(data.s4)<- c("dateType", "interval", "steps")
+
+data.s5<- rbind(data.s3, data.s4)
+
+library(lattice)
+xyplot(data.s5$steps~data.s5$interval | data.s5$dateType, type="l", xlab = "Interval", ylab = "Number of steps",  layout=c(1,2))
+```
+
+A pattern of higher number of steps in the morning is seen during weekdays(5:00 AM to 9:30 AM), where in weekends a pattern of higher number of steps is seen during the rest of the day(9:30 AM to 8:00 PM) in the weekend/weekday activity plot.
