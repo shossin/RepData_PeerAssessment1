@@ -222,18 +222,18 @@ Next, the histogram of total number of steps taken each day is generated:
 
 
 ```r
-##png(filename="plot1.png")
+png(filename="plot1.png")
 par(mfrow=c(1,2))
 ## dataset 1
 hist(data.s1$totSteps, breaks=20, xlab = "Total steps a day", main = "Excluding NAs", col="red")
 ## dataset 2
 hist(data.s2$totSteps, breaks=20, xlab = "Total steps a day", main = "Including NAs", col="blue")
+dev.off()
 ```
 
-![plot of chunk unnamed-chunk-5](figure/unnamed-chunk-5-1.png) 
-
-```r
-##dev.off()
+```
+## png 
+##   2
 ```
 
 Also, the Box plot of total number of steps taken each day highlighting the mean as red horizontal line.
@@ -241,7 +241,7 @@ Also, the Box plot of total number of steps taken each day highlighting the mean
 ```r
 m1 <-round(mean(data.s1$totSteps),0)
 m2 <-round(mean(data.s2$totSteps),0)
-##png(filename="plot2.png")
+png(filename="plot2.png")
 par(mfrow=c(1,2))
 ## dataset 1
 boxplot(data.s1$totSteps, ylab = paste("Total steps a day (mean:", m1, ")"), main = "Excluding NAs")
@@ -249,12 +249,12 @@ abline(h=mean(data.s1$totSteps),col="red", lwd=2)
 ## dataset 2
 boxplot(data.s2$totSteps, ylab = paste("Total steps a day (mean:",m2,")"), main = "Including NAs")
 abline(h=mean(data.s2$totSteps),col="red", lwd=2)
+dev.off()
 ```
 
-![plot of chunk unnamed-chunk-6](figure/unnamed-chunk-6-1.png) 
-
-```r
-##dev.off()
+```
+## png 
+##   2
 ```
 
 It is seen that the difference in the spread of data across the time is not that signification including/excluding the `NA's`, however, the mean has changed about a thousand steps.
@@ -274,7 +274,7 @@ maxStepInterval2 <- sm2[sm2["x"]==max(sm2["x"]),1]
 r2 <- range(sm2$x)
 y.rng <-c(min(r1, r2), max(r1,r2))
 
-##png(filename="plot3.png")
+png(filename="plot3.png")
 par(mfrow=c(1,1))
 plot(sm1$Group, sm1$x, type="l", col="blue", 
      xlab= paste("intervals (max excluding NAs:", maxStepInterval1, ", max excluding NAs:", maxStepInterval2,")"), 
@@ -283,12 +283,12 @@ lines(sm2$Group, sm2$x, col="red", type="l")
 abline(v=sm1[sm1["x"]==max(sm1["x"]),1], col="black", lwd=2)
 abline(v=sm2[sm2["x"]==max(sm2["x"]),1], col="green", lwd=2)
 legend("topright", legend=c("excluding NAs","including NAs"), col = c("blue","red"), ncol = 1, lwd = 1)
+dev.off()
 ```
 
-![plot of chunk unnamed-chunk-7](figure/unnamed-chunk-7-1.png) 
-
-```r
-##dev.off()
+```
+## png 
+##   2
 ```
 
 It is seen in the time series plot that the patterns have not changed significantly due to inclusion and exclusion of the `NA's` in the dataset. The maximum steps interval remain same for both at 8:35 AM which is shown as green line in both plots.
@@ -300,7 +300,7 @@ Average activity pattern during weekdays and weekends is also analyzed excluding
 
 ```r
 ## dataset 1
-##png(filename="plot4.png")
+png(filename="plot4.png")
 data.f1$dateT <- strptime(data.f1$date, "%Y-%m-%d") 
 data.f1$dateType <- weekdays(data.f1$dateT, abbreviate=TRUE)
 data.f1[data.f1$dateType %in% c("Sat","Sun"),5]<- "weekend"
@@ -319,12 +319,12 @@ data.s5<- rbind(data.s3, data.s4)
 library(lattice)
 xyplot(data.s5$steps~data.s5$interval | data.s5$dateType, type="l", 
        xlab = "Interval", ylab = "Number of steps",  layout=c(1,2))
+dev.off()
 ```
 
-![plot of chunk unnamed-chunk-8](figure/unnamed-chunk-8-1.png) 
-
-```r
-##dev.off()
+```
+## png 
+##   2
 ```
 
 A pattern of higher number of steps in the morning is seen during weekdays(5:00 AM to 9:30 AM), where in weekends a pattern of higher number of steps is seen during the rest of the day(9:30 AM to 8:00 PM) in the weekend/weekday activity plot.
